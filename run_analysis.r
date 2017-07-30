@@ -1,5 +1,6 @@
 library(reshape2)
 
+#below is the filename to be downloaded
 filename <- "getdata_dataset.zip"
 
 ## Download the data as given in the project description, can be downloaded from link provided:
@@ -18,29 +19,30 @@ features <- read.table("UCI HAR Dataset/features.txt")
 features[,2] <- as.character(features[,2])
 
 # Extract only the data on mean and standard deviation and load the datasets
-featuresWanted <- grep(".*mean.*|.*std.*", features[,2])
-featuresWanted.names <- features[featuresWanted,2]
-featuresWanted.names = gsub('-mean', 'Mean', featuresWanted.names)
-featuresWanted.names = gsub('-std', 'Std', featuresWanted.names)
-featuresWanted.names <- gsub('[-()]', '', featuresWanted.names)
-train <- read.table("UCI HAR Dataset/train/X_train.txt")[featuresWanted]
-trainActivities <- read.table("UCI HAR Dataset/train/Y_train.txt")
-trainSubjects <- read.table("UCI HAR Dataset/train/subject_train.txt")
-train <- cbind(trainSubjects, trainActivities, train)
-test <- read.table("UCI HAR Dataset/test/X_test.txt")[featuresWanted]
-testActivities <- read.table("UCI HAR Dataset/test/Y_test.txt")
-testSubjects <- read.table("UCI HAR Dataset/test/subject_test.txt")
-test <- cbind(testSubjects, testActivities, test)
+features_needed <- grep(".*mean.*|.*std.*", features[,2])
+features_needed.names <- features[features_needed,2]
+features_needed.names = gsub('-mean', 'Mean', features_needed.names)
+features_needed.names = gsub('-std', 'Std', features_needed.names)
+features_needed.names <- gsub('[-()]', '', features_needed.names)
+datatrain <- read.table("UCI HAR Dataset/train/X_train.txt")[features_needed]
+activity_train <- read.table("UCI HAR Dataset/train/Y_train.txt")
+subject_train <- read.table("UCI HAR Dataset/train/subject_train.txt")
+datatrain <- cbind(subject_train, activity_train, train)
+datatest <- read.table("UCI HAR Dataset/test/X_test.txt")[features_needed]
+activity_test <- read.table("UCI HAR Dataset/test/Y_test.txt")
+subject_test <- read.table("UCI HAR Dataset/test/subject_test.txt")
+datatest <- cbind(subject_test, activity_test, datatest)
 
 # merge datasets and add labels
-allData <- rbind(train, test)
-colnames(allData) <- c("subject", "activity", featuresWanted.names)
+final_data <- rbind(datatrain, datatest)
+colnames(final_data) <- c("subject", "activity", features_needed.names)
 
 # Activity and subjects need to be present as factors, below script will convert them into factors
-allData$activity <- factor(allData$activity, levels = activityLabels[,1], labels = activityLabels[,2])
-allData$subject <- as.factor(allData$subject)
+final_data$activity <- factor(final_data$activity, levels = activityLabels[,1], labels = activityLabels[,2])
+final_data$subject <- as.factor(final_data$subject)
 
-allData.melted <- melt(allData, id = c("subject", "activity"))
-allData.mean <- dcast(allData.melted, subject + activity ~ variable, mean)
+final_data.melted <- melt(final_data, id = c("subject", "activity"))
+final_data.mean <- dcast(final_data.melted, subject + activity ~ variable, mean)
 
-write.table(allData.mean, "tidy.txt", row.names = FALSE, quote = FALSE)
+# below code used to write tidy data to a text file, rown.names = FALSE avoids printing row numbers
+write.table(final_data.mean, "tidy.txt", row.names = FALSE, quote = FALSE)
